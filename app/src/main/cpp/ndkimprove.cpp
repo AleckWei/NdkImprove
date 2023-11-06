@@ -53,6 +53,27 @@ static JNINativeMethod jni_methods_table[] = {
         {"getStringFromCpp", "()Ljava/lang/String;", (void *) stringFromCpp},
 };
 
+static int
+registerNativeMethods(JNIEnv *env, const char *className, const JNINativeMethod *gMethods,
+                      int methodNum) {
+    jclass clazz;
+    LOGI("Registering %s native\n", className);
+    clazz = env->FindClass(className);
+
+    if (clazz == nullptr) {
+        LOGE("Native registration unable to find class %s \n", className);
+        return JNI_ERR;
+    }
+
+    if (env->RegisterNatives(clazz, gMethods, methodNum) < 0) {
+        LOGE("Register natives failed for %s \n", className);
+        return JNI_ERR;
+    }
+
+    env->DeleteLocalRef(clazz);
+    return JNI_OK;
+}
+
 /**
  * jni初始化时会回调的函数，方法名得和jni.h中的一致，否则调用不到
  * @param vm 虚拟机环境
@@ -63,8 +84,16 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     LOGD("call JNI_OnLoad");
 
     // 先声明一个JNIEnv(jni函数映射堆栈)
-    JNIEnv *env = NULL;
+    JNIEnv *env = nullptr;
 
+    if (vm->GetEnv((void **) &env, JNI_VERSION_1_4) != JNI_OK) {
+        return JNI_EVERSION;
+    }
+
+    registerNativeMethods(env, className, jni_methods_table,
+                          sizeof(jni_methods_table) / sizeof(JNINativeMethod));
+
+    return JNI_VERSION_1_4;
 }
 
 /**

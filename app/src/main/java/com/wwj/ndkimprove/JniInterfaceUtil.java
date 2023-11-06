@@ -15,8 +15,8 @@ public class JniInterfaceUtil {
         }
     }
 
-    public JniInterfaceUtil getsInstance() {
-        synchronized (this) {
+    public static JniInterfaceUtil getsInstance() {
+        synchronized (JniInterfaceUtil.class) {
             if (sInstance == null) {
                 sInstance = new JniInterfaceUtil();
             }
@@ -24,10 +24,15 @@ public class JniInterfaceUtil {
         }
     }
 
+    /**
+     * 动态注册的方法
+     *
+     * @return 返回c++中写好的字符串
+     */
     public String getString() {
         return getStringFromCpp();
     }
 
-    public native String getStringFromCpp();
+    private native String getStringFromCpp();
 
 }
